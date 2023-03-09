@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/flac-numcodecs.svg)](https://badge.fury.io/py/flac-numcodecs) ![tests](https://github.com/AllenNeuralDynamics/flac-numcodecs/actions/workflows/python-package.yml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/delta2D-numcodecs.svg)](https://badge.fury.io/py/delta2D-numcodecs) ![tests](https://github.com/AllenNeuralDynamics/delta2D-numcodecs/actions/workflows/python-package.yml/badge.svg)
 
 # Delta2D - numcodecs implementation
 
@@ -13,23 +13,23 @@ This implementation enables one to apply delta filters on specific dimentions as
 Install via `pip`:
 
 ```
-pip install delta2d-numcodecs
+pip install delta2D-numcodecs
 ```
 
 Or from sources:
 
 ```
-git clone https://github.com/AllenNeuralDynamics/delta2d-numcodecs.git
+git clone https://github.com/AllenNeuralDynamics/delta2D-numcodecs.git
 cd flac-numcodecs
 pip install .
 ```
 
 ## Usage
 
-This is a simple example on how to use the `Delta2d` codec with `zarr`:
+This is a simple example on how to use the `Delta2D` codec with `zarr`:
 
 ```
-from delta2d_numcodecs import Delta2D
+from delta2D_numcodecs import Delta2D
 
 data = ... # any 2D dumpy array
 # here we assume that the data has a shape of (num_samples, num_channels)

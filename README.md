@@ -51,5 +51,5 @@ data_read = z[:]
 Available `**kwargs` can be browsed with: `Delta2D?`
 
 **NOTE:** 
-In order to reload in zarr an array saved with the `Delta2D`, you just need to have the `delta2d_numcodecs` package
+In order to reload in zarr an array saved with the `Delta2D`, you just need to have the `delta2D_numcodecs` package
 installed.

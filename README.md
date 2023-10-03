@@ -33,12 +33,13 @@ from delta2D_numcodecs import Delta2D
 
 data = ... # any 2D dumpy array
 # here we assume that the data has a shape of (num_samples, num_channels)
+num_channels = data.shape[1]
 
 # instantiate Delta2D in time dimension
-delta_time = Delta2D(dtype=data.dtype, axis=0)
+delta_time = Delta2D(dtype=data.dtype, num_channels=num_channels, axis=0)
 
 # instantiate Delta2D in space dimension
-delta_space = Delta2D(dtype=data.dtype, axis=1)
+delta_space = Delta2D(dtype=data.dtype, num_channels=num_channels, axis=1)
 
 # using default Zarr compressor
 z_time = zarr.array(data, filters=[delta_time])

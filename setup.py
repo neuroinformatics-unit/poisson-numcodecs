@@ -10,22 +10,22 @@ def open_requirements(fname):
 
 
 d = {}
-exec(open("delta2D_numcodecs/version.py").read(), None, d)
+exec(open("poisson_numcodecs/version.py").read(), None, d)
 version = d['version']
 long_description = open("README.md").read()
 
 install_requires = open_requirements('requirements.txt')
-entry_points = {"numcodecs.codecs": ["delta2D = delta2D_numcodecs:Delta2D"]}
+entry_points = {"numcodecs.codecs": ["poisson = poisson_numcodecs:Poisson"]}
 
 setup(
-    name="delta2D_numcodecs",
+    name="poisson_numcodecs",
     version=version,
-    author="Alessio Buccino",
-    author_email="alessiop.buccino@gmail.com",
-    description="Numcodecs implementation of delta filter in 2D.",
+    author="Jerome Lecoq",
+    author_email="jeromel@alleninstitute.org",
+    description="Numcodecs implementation of a poisson noise calibration.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/AllenNeuralDynamics/delta2D-numcodecs",
+    url="https://github.com/AllenNeuralDynamics/poisson-numcodecs",
     install_requires=install_requires,
     classifiers=[
         "Programming Language :: Python :: 3",

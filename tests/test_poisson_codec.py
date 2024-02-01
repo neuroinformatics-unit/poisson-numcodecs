@@ -1,4 +1,4 @@
-from delta2D_numcodecs import Delta2D
+from poisson_numcodecs import Poisson
 import numpy as np
 import zarr
 import pytest
@@ -12,7 +12,7 @@ def run_all_options(data):
     for axis in (0, 1):
         print(f"Dtype {dtype} - axis {axis}")
 
-        cod = Delta2D(dtype=dtype, num_channels=data.shape[1], axis=axis)
+        cod = Poisson(dtype=dtype, num_channels=data.shape[1], axis=axis)
         enc = cod.encode(data)
         assert enc.shape == data.shape
 

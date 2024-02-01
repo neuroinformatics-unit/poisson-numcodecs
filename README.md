@@ -1,11 +1,12 @@
-[![PyPI version](https://badge.fury.io/py/delta2D-numcodecs.svg)](https://badge.fury.io/py/delta2D-numcodecs) ![tests](https://github.com/AllenNeuralDynamics/delta2D-numcodecs/actions/workflows/python-package.yml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/poisson-numcodecs.svg)](https://badge.fury.io/py/poisson-numcodecs) ![tests](https://github.com/AllenNeuralDynamics/poisson-numcodecs/actions/workflows/python-package.yml/badge.svg)
 
-# Delta2D - numcodecs implementation
+# Poisson - numcodecs implementation
 
-[Numcodecs](https://numcodecs.readthedocs.io/en/latest/index.html) implementation of the [Delta] filter applied to 
-2D input data.
+This codec enables one to equalize noise across imaging levels for shot-noise 
+limited imaging. This allows for some lossy compression based on fundamental 
+statistics coming from each pixel. Precision can be tuned to adjust the compression 
+trade-off. 
 
-This implementation enables one to apply delta filters on specific dimentions as a filter in 
 [Zarr](https://zarr.readthedocs.io/en/stable/index.html).
 
 ## Installation
@@ -13,44 +14,43 @@ This implementation enables one to apply delta filters on specific dimentions as
 Install via `pip`:
 
 ```
-pip install delta2D-numcodecs
+pip install poisson-numcodecs
 ```
 
 Or from sources:
 
 ```
-git clone https://github.com/AllenNeuralDynamics/delta2D-numcodecs.git
-cd flac-numcodecs
+git clone https://github.com/AllenNeuralDynamics/poisson-numcodecs.git
+cd poisson-numcodecs
 pip install .
 ```
 
 ## Usage
 
-This is a simple example on how to use the `Delta2D` codec with `zarr`:
+This is a simple example on how to use the `Poisson` codec with `zarr`:
 
 ```
-from delta2D_numcodecs import Delta2D
+from poisson_numcodecs import Poisson
 
 data = ... # any 2D dumpy array
-# here we assume that the data has a shape of (num_samples, num_channels)
-num_channels = data.shape[1]
+# here we assume that the data has a shape of (num_frames, x, y)
 
-# instantiate Delta2D in time dimension
-delta_time = Delta2D(dtype=data.dtype, num_channels=num_channels, axis=0)
+# dark_signal and signal_to_photon_gain must be calculated from the data or 
+# measured directly on the instrument.
+# dark_signal is the signal level when no photons are recorded. 
+# signal_to_photon_gain is the conversion scalor to convert the measure signal 
+# into absolute photon numbers. 
 
-# instantiate Delta2D in space dimension
-delta_space = Delta2D(dtype=data.dtype, num_channels=num_channels, axis=1)
+# instantiate Poisson object
+poisson_filter = Poisson(dtype=data.dtype, dark_signal, signal_to_photon_gain, precision)
 
 # using default Zarr compressor
-z_time = zarr.array(data, filters=[delta_time])
-z_space = zarr.array(data, filters=[delta_space])
-# apply in both time and space, sequentally
-z_time_space = zarr.array(data, filters=[delta_time, delta_space])
+photon_data = zarr.array(data, filters=[poisson_filter])
 
-data_read = z[:]
+data_read = photon_data[:]
 ```
-Available `**kwargs` can be browsed with: `Delta2D?`
+Available `**kwargs` can be browsed with: `Poisson?`
 
 **NOTE:** 
-In order to reload in zarr an array saved with the `Delta2D`, you just need to have the `delta2D_numcodecs` package
+In order to reload in zarr an array saved with the `Poisson`, you just need to have the `poisson_numcodecs` package
 installed.

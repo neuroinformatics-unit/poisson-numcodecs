@@ -42,7 +42,7 @@ data = ... # any 2D dumpy array
 # into absolute photon numbers. 
 
 # instantiate Poisson object
-poisson_filter = Poisson(dtype=data.dtype, dark_signal, signal_to_photon_gain, precision)
+poisson_filter = Poisson(dark_signal, signal_to_photon_gain, encoded_dtype, decoded_dtype, integer_per_photon)
 
 # using default Zarr compressor
 photon_data = zarr.array(data, filters=[poisson_filter])

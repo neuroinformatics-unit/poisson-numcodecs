@@ -11,7 +11,7 @@ from numcodecs.compat import ndarray_copy
 ### NUMCODECS Codec ###
 class Poisson(Codec):
     """Codec for 3-dimensional Delta. The codec assumes that input data are of shape:
-    (num_samples, num_channels).
+    (time, x, y).
 
     Parameters
     ----------
@@ -24,28 +24,45 @@ class Poisson(Codec):
     """
     codec_id = "poisson"
 
-    def __init__(self, dark_signal, signal_to_photon_gain):
+    def __init__(self, dark_signal, 
+                 signal_to_photon_gain, 
+                 encoded_dtype='int8', 
+                 decoded_dtype='int16',
+                 integer_per_photon=4,
+                 ):
+        
         self.dark_signal = dark_signal
         self.signal_to_photon_gain = signal_to_photon_gain
-        self.dtype = np.float32
+        self.encoded_dtype = encoded_dtype
+        self.decoded_dtype = decoded_dtype
+        self.integer_per_photon = integer_per_photon
 
     def encode(self, buf):
-        enc = np.zeros(buf.shape, dtype=self.dtype)
-        enc = np.sqrt((buf - self.dark_signal) / self.signal_to_photon_gain)
+        print("Buffer: ", buf)
+        enc = np.zeros(buf.shape, dtype=self.encoded_dtype)
+        centered = (buf.astype('float') - self.dark_signal) / self.signal_to_photon_gain
+        enc = self.integer_per_photon * (np.sqrt(np.maximum(0, centered)))
+        enc = enc.astype(self.encoded_dtype)
+        print("Encoded: ", enc)
         return enc
 
     def decode(self, buf, out=None):
-        buf = np.frombuffer(buf, self.dtype)
-        dec = buf ** 2 * self.signal_to_photon_gain + self.dark_signal
-        out = ndarray_copy(dec, out)
-        return out
+        print("decoded buffer: ", buf)
+        dec = ((buf.astype('float') / self.integer_per_photon)**2) * self.signal_to_photon_gain + self.dark_signal
+        outarray = np.round(dec)
+        outarray = ndarray_copy(outarray, out)
+        print("Decoded: ", outarray.astype(self.decoded_dtype))
+        return outarray.astype(self.decoded_dtype)
 
     def get_config(self):
         # override to handle encoding dtypes
         return dict(
             id=self.codec_id,
             dark_signal=self.dark_signal,
-            signal_to_photon_gain=self.signal_to_photon_gain
+            signal_to_photon_gain=self.signal_to_photon_gain,
+            encoded_dtype=self.encoded_dtype,
+            decoded_dtype=self.decoded_dtype,
+            integer_per_photon=self.integer_per_photon
         )
 
 numcodecs.register_codec(Poisson)

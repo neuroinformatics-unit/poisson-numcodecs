@@ -38,20 +38,17 @@ class Poisson(Codec):
         self.integer_per_photon = integer_per_photon
 
     def encode(self, buf):
-        print("Buffer: ", buf)
         enc = np.zeros(buf.shape, dtype=self.encoded_dtype)
         centered = (buf.astype('float') - self.dark_signal) / self.signal_to_photon_gain
         enc = self.integer_per_photon * (np.sqrt(np.maximum(0, centered)))
         enc = enc.astype(self.encoded_dtype)
-        print("Encoded: ", enc)
         return enc
 
     def decode(self, buf, out=None):
-        print("decoded buffer: ", buf)
+        buf = np.frombuffer(buf, self.encoded_dtype)
         dec = ((buf.astype('float') / self.integer_per_photon)**2) * self.signal_to_photon_gain + self.dark_signal
         outarray = np.round(dec)
         outarray = ndarray_copy(outarray, out)
-        print("Decoded: ", outarray.astype(self.decoded_dtype))
         return outarray.astype(self.decoded_dtype)
 
     def get_config(self):

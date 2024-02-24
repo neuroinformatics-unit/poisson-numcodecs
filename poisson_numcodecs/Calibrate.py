@@ -287,7 +287,7 @@ class RasterCalibratePhotons():
         _mat = np.vstack([mean_array, np.ones(len(mean_array))]).T
 
         # We first fit a single line to reference the data for all the lines
-        slope, offset = np.linalg.lstsq(_mat, variance_array)[0]
+        slope, offset = np.linalg.lstsq(_mat, variance_array, rcond=None)[0]
 
         # define the model
         training_data = np.column_stack((mean_array, (variance_array-offset)/slope))
@@ -316,7 +316,7 @@ class RasterCalibratePhotons():
 
     def get_pixel_assignement_images(self):
         """Get the pixel assignment images. This is useful for understanding the pixels that are assigned to each group."""
-        
+
         if self.photon_gain is None:
             raise ValueError("You need to compute the photon gain parameters first.")
         

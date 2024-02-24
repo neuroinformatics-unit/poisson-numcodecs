@@ -1,3 +1,5 @@
 numpy
 numcodecs
 zarr
+matplotlib
+scipy

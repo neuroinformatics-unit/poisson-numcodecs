@@ -2,11 +2,9 @@
 Numcodecs Codec implementation for Poisson noise calibration
 """
 import numpy as np
-
 import numcodecs
 from numcodecs.abc import Codec
 from numcodecs.compat import ndarray_copy
-
 
 ### NUMCODECS Codec ###
 class Poisson(Codec):
@@ -45,7 +43,6 @@ class Poisson(Codec):
         return enc
 
     def decode(self, buf, out=None):
-        buf = np.frombuffer(buf, self.encoded_dtype)
         dec = ((buf.astype('float') / self.integer_per_photon)**2) * self.signal_to_photon_gain + self.dark_signal
         outarray = np.round(dec)
         outarray = ndarray_copy(outarray, out)

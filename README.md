@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/poisson-numcodecs.svg)](https://badge.fury.io/py/poisson-numcodecs) ![tests](https://github.com/AllenNeuralDynamics/poisson-numcodecs/actions/workflows/python-package.yml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/poisson-numcodecs.svg)](https://badge.fury.io/py/poisson-numcodecs) ![tests](https://github.com/AllenNeuralDynamics/poisson-numcodecs/actions/workflows/tests.yaml/badge.svg)
 
 # Poisson - numcodecs implementation
 
@@ -17,12 +17,22 @@ Install via `pip`:
 pip install poisson-numcodecs
 ```
 
-Or from sources:
+### Developer installation
 
 ```
+conda create -n poisson_numcodecs python=3.xx
+conda activate poisson_numcodecs
 git clone https://github.com/AllenNeuralDynamics/poisson-numcodecs.git
 cd poisson-numcodecs
-pip install .
+pip install -r requirements.txt
+pip install -e .
+```
+
+Make sure everything works:
+
+```
+pip install pytest
+pytest tests/
 ```
 
 ## Usage

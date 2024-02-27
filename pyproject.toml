@@ -1,12 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools_scm>=8"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools_scm]
-version_file = "_version.py"
 
 [project]
 name = "poisson_numcodecs"
+version = "0.1.0"
 authors = [
   { name="Jerome Lecoq", email="jeromel@alleninstitute.org" },
 ]

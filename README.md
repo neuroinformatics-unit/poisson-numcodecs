@@ -24,6 +24,7 @@ conda create -n poisson_numcodecs python=3.xx
 conda activate poisson_numcodecs
 git clone https://github.com/AllenNeuralDynamics/poisson-numcodecs.git
 cd poisson-numcodecs
+pip install -r requirements.txt
 pip install -e .
 ```
 

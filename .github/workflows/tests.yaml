@@ -1,6 +1,9 @@
 name: poisson_numcodecs CI
 
 on:
+  push:
+    branches: [main]
+    
   pull_request:
     branches: [main]
     types: [synchronize, opened, reopened, ready_for_review]

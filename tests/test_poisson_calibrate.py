@@ -3,6 +3,8 @@ import numpy as np
 import pytest
 
 DEBUG = False
+SEED = 7916
+rng = np.random.default_rng(SEED)
 
 def make_fake_movie(gains=[10], offsets=[1], shape=(100, 10, 10), min_rate=1, max_rate=5, dtype="int16"):
     assert isinstance(shape, tuple)
@@ -15,13 +17,13 @@ def make_fake_movie(gains=[10], offsets=[1], shape=(100, 10, 10), min_rate=1, ma
     for x_ind in range(x):
         for y_ind in range(y):
             # We pick a random rate for each pixel
-            rate = np.random.uniform(min_rate, max_rate)
+            rate = rng.uniform(min_rate, max_rate)
 
             # We pick a random gain and offset for each pixel
-            gain = gains[np.random.randint(0, nb_gains)]
-            offset = offsets[np.random.randint(0, nb_gains)]
+            gain = gains[rng.integers(0, nb_gains)]
+            offset = offsets[rng.integers(0, nb_gains)]
 
-            output_array[:, x_ind, y_ind] = gain*np.random.poisson(rate, size=times)+offset
+            output_array[:, x_ind, y_ind] = gain*rng.poisson(rate, size=times)+offset
     return output_array
 
 

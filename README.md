@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/poisson-numcodecs.svg)](https://badge.fury.io/py/poisson-numcodecs) ![tests](https://github.com/AllenNeuralDynamics/poisson-numcodecs/actions/workflows/tests.yaml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/poisson-numcodecs.svg)](https://badge.fury.io/py/poisson-numcodecs) ![tests](https://github.com/datajoint/poisson-numcodecs/actions/workflows/tests.yaml/badge.svg)
 
 # Poisson - numcodecs implementation
 

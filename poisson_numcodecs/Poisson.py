@@ -44,7 +44,7 @@ class Poisson(Codec):
 
     def decode(self, buf, out=None):
         dec = ensure_ndarray(buf).view(self.encoded_dtype)
-        dec = ((dec.astype('float') / self.integer_per_photon)**2) * self.signal_to_photon_gain + self.dark_signal
+        dec = ((dec.astype('float') )**2 / self.integer_per_photon) * self.signal_to_photon_gain + self.dark_signal
         outarray = np.round(dec)
         outarray = ndarray_copy(outarray, out)
         return outarray.astype(self.decoded_dtype)

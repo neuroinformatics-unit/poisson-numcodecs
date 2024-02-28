@@ -8,7 +8,7 @@ from . import estimate
 
 ### NUMCODECS Codec ###
 class Poisson(Codec):
-    """Codec for 3-dimensional data. The codec assumes that input data are of shape:
+    """Codec for 3-dimensional Filter. The codec assumes that input data are of shape:
     (time, x, y).
 
     Parameters

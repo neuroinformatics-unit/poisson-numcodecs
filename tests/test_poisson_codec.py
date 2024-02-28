@@ -1,4 +1,4 @@
-from poisson_numcodecs.Poisson import Poisson
+from poisson_numcodecs import Poisson
 import numpy as np
 import pytest
 

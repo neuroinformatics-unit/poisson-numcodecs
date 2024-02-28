@@ -42,7 +42,7 @@ class Poisson(Codec):
         centered = (buf.astype('float') - self.dark_signal) / self.signal_to_photon_gain
 
         # https://en.wikipedia.org/wiki/Anscombe_transform for the forward
-        enc = 2.0 (np.sqrt(np.maximum(0, centered + 3/8)))
+        enc = 2.0 * (np.sqrt(np.maximum(0, centered + 3/8)))
 
         # This is the part that is applied to discard noise in compressed form
         enc = enc / self.beta 

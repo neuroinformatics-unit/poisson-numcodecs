@@ -46,6 +46,10 @@ class Poisson(Codec):
 
         # This is the part that is applied to discard noise in compressed form
         enc = enc / self.beta 
+
+        # We have to go to integers in a clean way
+        enc = np.round(enc)
+
         enc = enc.astype(self.encoded_dtype)
         
         return enc

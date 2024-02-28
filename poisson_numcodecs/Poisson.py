@@ -49,15 +49,4 @@ class Poisson(Codec):
         outarray = ndarray_copy(outarray, out)
         return outarray.astype(self.decoded_dtype)
 
-    def get_config(self):
-        # override to handle encoding dtypes
-        return dict(
-            id=self.codec_id,
-            dark_signal=self.dark_signal,
-            signal_to_photon_gain=self.signal_to_photon_gain,
-            encoded_dtype=self.encoded_dtype,
-            decoded_dtype=self.decoded_dtype,
-            integer_per_photon=self.integer_per_photon
-        )
-
 numcodecs.register_codec(Poisson)

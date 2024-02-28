@@ -33,21 +33,18 @@ class Poisson(Codec):
         self.signal_to_photon_gain = signal_to_photon_gain
         self.encoded_dtype = encoded_dtype
         self.decoded_dtype = decoded_dtype
-        self.background_noise_mean = (
-                    -dark_signal / signal_to_photon_gain
-                )
         self.beta = beta
 
     def encode(self, buf):
         enc = np.zeros(buf.shape, dtype=self.encoded_dtype)
-        centered = (buf.astype('float') - self.background_noise_mean) / self.signal_to_photon_gain
+        centered = (buf.astype('float') - self.dark_signal) / self.signal_to_photon_gain
         enc = 2.0 / self.beta * (np.sqrt(np.maximum(0, centered)))
         enc = enc.astype(self.encoded_dtype)
         return enc
 
     def decode(self, buf, out=None):
         dec = ensure_ndarray(buf).view(self.encoded_dtype)
-        dec = ((dec.astype('float') * self.beta / 2.0 )**2 ) * self.signal_to_photon_gain + self.background_noise_mean
+        dec = ((dec.astype('float') * self.beta / 2.0 )**2 ) * self.signal_to_photon_gain + self.dark_signal
         outarray = np.round(dec)
         outarray = ndarray_copy(outarray, out)
         return outarray.astype(self.decoded_dtype)

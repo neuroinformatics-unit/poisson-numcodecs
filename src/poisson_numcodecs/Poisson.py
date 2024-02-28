@@ -9,7 +9,7 @@ from . import estimate
 
 ### NUMCODECS Codec ###
 class Poisson(Codec):
-    """Codec for 3-dimensional Delta. The codec assumes that input data are of shape:
+    """Codec for 3-dimensional data. The codec assumes that input data are of shape:
     (time, x, y).
 
     Parameters
@@ -46,7 +46,7 @@ class Poisson(Codec):
         inverse = estimate.make_inverse_lookup(lookup)
         ndims = int(buf[0])
         shape = [int(_) for _ in buf[1:ndims+1]]
-        arr = np.frombuffer(buf[ndims+1:], dtype='uint8').reshape(shape)
+        arr = np.frombuffer(buf[ndims+1:], dtype=self.encoded_dtype).reshape(shape)
         decoded = estimate.lookup(arr, inverse)
         return decoded.astype(self.decoded_dtype)
 

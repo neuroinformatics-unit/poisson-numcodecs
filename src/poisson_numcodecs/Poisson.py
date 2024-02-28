@@ -5,6 +5,7 @@ import numpy as np
 import numcodecs
 from numcodecs.abc import Codec
 from numcodecs.compat import ndarray_copy
+from . import estimate
 
 ### NUMCODECS Codec ###
 class Poisson(Codec):
@@ -13,50 +14,41 @@ class Poisson(Codec):
 
     Parameters
     ----------
-    dark_signal : float
+    zero_level : float
         Signal level when no photons are recorded. 
         This should pre-computed or measured directly on the instrument.
-    signal_to_photon_gain : float
+    photon_sensitivity : float
         Conversion scalor to convert the measure signal into absolute photon numbers.
         This should pre-computed or measured directly on the instrument.
     """
     codec_id = "poisson"
 
-    def __init__(self, dark_signal, 
-                 signal_to_photon_gain, 
+    def __init__(self, 
+                 zero_level, 
+                 photon_sensitivity, 
                  encoded_dtype='int8', 
                  decoded_dtype='int16',
-                 integer_per_photon=4,
-                 ):
-        
-        self.dark_signal = dark_signal
-        self.signal_to_photon_gain = signal_to_photon_gain
+                 ): 
+        self.zero_level = zero_level
+        self.photon_sensitivity = photon_sensitivity
         self.encoded_dtype = encoded_dtype
         self.decoded_dtype = decoded_dtype
-        self.integer_per_photon = integer_per_photon
 
-    def encode(self, buf):
-        enc = np.zeros(buf.shape, dtype=self.encoded_dtype)
-        centered = (buf.astype('float') - self.dark_signal) / self.signal_to_photon_gain
-        enc = self.integer_per_photon * (np.sqrt(np.maximum(0, centered)))
-        enc = enc.astype(self.encoded_dtype)
-        return enc
+    def encode(self, buf: np.array) -> bytes:
+        lookup = estimate.make_anscombe_lookup(self.photon_sensitivity)
+        encoded = estimate.lookup(buf, lookup)
+        shape = [encoded.ndim] + list(encoded.shape)
+        shape = np.array(shape, dtype='uint8')
+        return shape.tobytes() + encoded.astype(self.encoded_dtype).tobytes()
 
-    def decode(self, buf, out=None):
-        dec = ((buf.astype('float') / self.integer_per_photon)**2) * self.signal_to_photon_gain + self.dark_signal
-        outarray = np.round(dec)
-        outarray = ndarray_copy(outarray, out)
-        return outarray.astype(self.decoded_dtype)
+    def decode(self, buf: bytes, out=None) -> np.array:
+        lookup = estimate.make_anscombe_lookup(self.photon_sensitivity)
+        inverse = estimate.make_inverse_lookup(lookup)
+        ndims = int(buf[0])
+        shape = [int(_) for _ in buf[1:ndims+1]]
+        arr = np.frombuffer(buf[ndims+1:], dtype='uint8').reshape(shape)
+        decoded = estimate.lookup(arr, inverse)
+        return decoded.astype(self.decoded_dtype)
 
-    def get_config(self):
-        # override to handle encoding dtypes
-        return dict(
-            id=self.codec_id,
-            dark_signal=self.dark_signal,
-            signal_to_photon_gain=self.signal_to_photon_gain,
-            encoded_dtype=self.encoded_dtype,
-            decoded_dtype=self.decoded_dtype,
-            integer_per_photon=self.integer_per_photon
-        )
 
 numcodecs.register_codec(Poisson)

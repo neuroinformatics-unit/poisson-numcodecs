@@ -78,26 +78,25 @@ def compute_sensitivity(movie: np.array, count_weight_gamma: float=0.2) -> dict:
         zero_level=zero_level,
     )
 
-def make_luts(zero_level: int, sensitivity: float, input_max: int, beta: float=0.5):
+def make_anscombe_lookup(sensitivity: float, input_max: int=0x7fff, beta: float=0.5):
 	"""
-	Compute lookup tables LUT1 and LUT2.
-	LUT1 converts a linear grayscale image into a uniform variance image. 
-	LUT2 is the inverse of LUT1 
-	:param zero_level: the input level correspoding to zero photon rate
+	Compute the Anscombe lookup table.
+	The lookup converts a linear grayscale image into a uniform variance image. 
 	:param sensitivity: the size of one photon in the linear input image.
-	:param beta: the grayscale quantization step in units of noise std dev
+    :param input_max: the maximum value in the input
+	:param beta: the grayscale quantization step expressed in units of noise std dev
 	"""
-	# produce anscombe LUT1 and LUT2
-	xx = (np.r_[:input_max + 1] - zero_level) / sensitivity
-	zero_slope = 1 / beta / np.sqrt(3/8)
-	offset = -xx.min() * zero_slope
-	LUT1 = np.uint8(
-		offset +
-		(xx < 0) * (xx * zero_slope) +
-		(xx >= 0) * (2.0 / beta * (np.sqrt(np.maximum(0, xx) + 3/8) - np.sqrt(3/8))))
-	_, LUT2 = np.unique(LUT1, return_index=True)
-	LUT2 += (np.r_[:LUT2.size] / LUT2.size * (LUT2[-1] - LUT2[-2])/2).astype(np.int16)
-	return LUT1, LUT2.astype(np.int16)
+	# produce anscombe lookup_table
+	xx = np.r_[:input_max + 1] / sensitivity
+	lookup = np.uint8(
+        2.0 / beta * (np.sqrt(np.maximum(0, xx) + 3/8) - np.sqrt(3/8)))
+	return lookup
+
+
+def make_inverse_lookup(lookup):
+    _, inverse = np.unique(lookup, return_index=True)
+    inverse += (np.r_[:inverse.size] / inverse.size * (inverse[-1] - inverse[-2])/2).astype(np.int16)
+    return inverse 
 
 
 def lookup(movie, LUT):

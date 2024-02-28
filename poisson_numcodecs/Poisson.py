@@ -57,7 +57,7 @@ class Poisson(Codec):
         dec = dec.astype('float') * self.beta
         
         # https://en.wikipedia.org/wiki/Anscombe_transform for the inverse without bias
-        dec = dec**2 / 4.0 - 1/8 + 1/4*np.sqrt(1.5)/dec - 11/8/(dec**2)+5/8*np.sqrt(1.5)/(dec**3) 
+        dec = dec**2 / 4.0 - 1/8
 
         # We convert back to arbitrary pixels
         dec = dec * self.signal_to_photon_gain + self.dark_signal

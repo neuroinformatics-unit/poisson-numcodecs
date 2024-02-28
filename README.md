@@ -2,10 +2,16 @@
 
 # Poisson - numcodecs implementation
 
-This codec enables one to equalize noise across imaging levels for shot-noise 
-limited imaging. This allows for some lossy compression based on fundamental 
-statistics coming from each pixel. Precision can be tuned to adjust the compression 
-trade-off. 
+This codec is designed for compressing movies with Poisson noise, which are produced by photon-limited modalities such multiphoton microscopy, radiography, and astronomy.
+
+The codec assumes that the video is linearly encoded with a potential offset (`zero_level`) and that the `photon_sensitivity` (the average increase in intensity per photon) is known or can be accurately estimated from the data.
+
+The codec re-quantizes the grayscale efficiently with a square-root-like transformation to equalize the noise variance across the grayscale levels: the [Anscombe Transform](https://en.wikipedia.org/wiki/Anscombe_transform).
+This results in a smaller number of unique grayscale levels and significant improvements in the compressibility of the data without sacrificing signal accuracy.
+
+To use the codec, one must supply two pieces of information: `zero_level` (the input value corresponding to the absence of light) and `photon_sensitivity` (levels/photon).
+
+The codec is used in Zarr as a filter prior to compression.
 
 [Zarr](https://zarr.readthedocs.io/en/stable/index.html).
 
@@ -37,30 +43,4 @@ pytest tests/
 
 ## Usage
 
-This is a simple example on how to use the `Poisson` codec with `zarr`:
-
-```
-from poisson_numcodecs import Poisson
-
-data = ... # any 2D dumpy array
-# here we assume that the data has a shape of (num_frames, x, y)
-
-# dark_signal and signal_to_photon_gain must be calculated from the data or 
-# measured directly on the instrument.
-# dark_signal is the signal level when no photons are recorded. 
-# signal_to_photon_gain is the conversion scalor to convert the measure signal 
-# into absolute photon numbers. 
-
-# instantiate Poisson object
-poisson_filter = Poisson(dark_signal, signal_to_photon_gain, encoded_dtype, decoded_dtype, integer_per_photon)
-
-# using default Zarr compressor
-photon_data = zarr.array(data, filters=[poisson_filter])
-
-data_read = photon_data[:]
-```
-Available `**kwargs` can be browsed with: `Poisson?`
-
-**NOTE:** 
-In order to reload in zarr an array saved with the `Poisson`, you just need to have the `poisson_numcodecs` package
-installed.
+An complete example is provided in [examples/workbook.ipynb](examples/workbook.ipynb)

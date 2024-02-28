@@ -4,7 +4,6 @@ Numcodecs Codec implementation for Poisson noise calibration
 import numpy as np
 import numcodecs
 from numcodecs.abc import Codec
-from numcodecs.compat import ndarray_copy
 from . import estimate
 
 ### NUMCODECS Codec ###

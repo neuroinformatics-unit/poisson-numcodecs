@@ -34,14 +34,14 @@ class Poisson(Codec):
         self.encoded_dtype = encoded_dtype
         self.decoded_dtype = decoded_dtype
 
-    def encode(self, buf):
+    def encode(self, buf: np.array) -> bytes:
         lookup = estimate.make_anscombe_lookup(self.photon_sensitivity)
         encoded = estimate.lookup(buf, lookup)
         shape = [encoded.ndim] + list(encoded.shape)
         shape = np.array(shape, dtype='uint8')
         return shape.tobytes() + encoded.astype(self.encoded_dtype).tobytes()
 
-    def decode(self, buf, out=None):
+    def decode(self, buf: bytes, out=None) -> np.array:
         lookup = estimate.make_anscombe_lookup(self.photon_sensitivity)
         inverse = estimate.make_inverse_lookup(lookup)
         ndims = int(buf[0])

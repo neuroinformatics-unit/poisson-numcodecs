@@ -5,6 +5,7 @@ import numpy as np
 import numcodecs
 from numcodecs.abc import Codec
 from . import estimate
+from numcodecs.compat import ndarray_copy, ensure_ndarray
 
 ### NUMCODECS Codec ###
 class Poisson(Codec):
@@ -33,21 +34,17 @@ class Poisson(Codec):
         self.encoded_dtype = encoded_dtype
         self.decoded_dtype = decoded_dtype
 
-    def encode(self, buf: np.array) -> bytes:
-        lookup = estimate.make_anscombe_lookup(self.photon_sensitivity)
-        encoded = estimate.lookup(buf, lookup)
-        shape = [encoded.ndim] + list(encoded.shape)
-        shape = np.array(shape, dtype='uint8')
-        return shape.tobytes() + encoded.astype(self.encoded_dtype).tobytes()
+        self.lookup = estimate.make_anscombe_lookup(self.photon_sensitivity)
+        self.inverse = estimate.make_inverse_lookup(self.lookup)
 
-    def decode(self, buf: bytes, out=None) -> np.array:
-        lookup = estimate.make_anscombe_lookup(self.photon_sensitivity)
-        inverse = estimate.make_inverse_lookup(lookup)
-        ndims = int(buf[0])
-        shape = [int(_) for _ in buf[1:ndims+1]]
-        arr = np.frombuffer(buf[ndims+1:], dtype=self.encoded_dtype).reshape(shape)
-        decoded = estimate.lookup(arr, inverse)
+    def encode(self, buf: np.array):
+        encoded = np.zeros(buf.shape, dtype=self.encoded_dtype)
+        encoded = estimate.lookup(buf,  self.lookup)
+        return encoded.astype(self.encoded_dtype)
+
+    def decode(self, buf, out=None):        
+        dec = ensure_ndarray(buf).view(self.encoded_dtype)
+        decoded = estimate.lookup(dec,  self.inverse)
         return decoded.astype(self.decoded_dtype)
-
-
+    
 numcodecs.register_codec(Poisson)

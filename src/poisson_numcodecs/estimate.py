@@ -77,39 +77,3 @@ def compute_sensitivity(movie: np.array, count_weight_gamma: float=0.2) -> dict:
         sensitivity=sensitivity,
         zero_level=zero_level,
     )
-
-def make_anscombe_lookup(sensitivity: float, input_max: int=0x7fff, beta: float=0.5):
-	"""
-	Compute the Anscombe lookup table.
-	The lookup converts a linear grayscale image into a uniform variance image. 
-	:param sensitivity: the size of one photon in the linear input image.
-    :param input_max: the maximum value in the input
-	:param beta: the grayscale quantization step expressed in units of noise std dev
-	"""
-	# produce anscombe lookup_table
-	xx = np.r_[:input_max + 1] / sensitivity
-	lookup = np.uint8(
-        2.0 / beta * (np.sqrt(np.maximum(0, xx) + 3/8) - np.sqrt(3/8)))
-	return lookup
-
-
-def make_inverse_lookup(lookup):
-    _, inverse = np.unique(lookup, return_index=True)
-    inverse += (np.r_[:inverse.size] / inverse.size * (inverse[-1] - inverse[-2])/2).astype(np.int16)
-    return inverse 
-
-
-def lookup(movie, LUT):
-    """
-    Apply lookup table LUT to input movie
-    """
-    return LUT[np.maximum(0, np.minimum(movie, LUT.size-1))]
-
-
-def save_movie(movie, path, scale=1, format='gif'):
-    if format == "gif":
-        with io.get_writer(path, mode='I', duration=.01, loop=False) as f:
-            for frame in movie:
-                f.append_data(scale * frame)
-    else:
-        raise NotImplementedError(f"Format {format} is not implemented")

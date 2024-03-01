@@ -23,7 +23,7 @@ def test_data(dtype="int16"):
 
 def test_poisson_encode_decode(test_data):
     poisson_codec = Poisson(
-        zero_level=0,
+        dark_signal=0,
         photon_sensitivity=1.0,
         encoded_dtype='uint8', 
         decoded_dtype='int16'

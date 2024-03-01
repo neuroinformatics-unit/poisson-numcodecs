@@ -34,6 +34,22 @@ def test_poisson_encode_decode(test_data):
         decoded = poisson_codec.decode(encoded)
         np.testing.assert_allclose(decoded, example_data, atol=1e-3)
 
+def test_poisson_encode_decode_non_lookup(test_data):
+    poisson_codec = Poisson(
+        dark_signal=0,
+        photon_sensitivity=1.0,
+        encoded_dtype='uint8', 
+        decoded_dtype='int16',
+        use_lookup=False
+    )
+    
+    for example_data in test_data:
+        encoded = poisson_codec.encode(example_data)
+        decoded = poisson_codec.decode(encoded)
+        np.testing.assert_allclose(decoded, example_data, atol=1e-3)
+
+
 if __name__ == '__main__':
     list_data = test_data("int16")
     test_poisson_encode_decode(list_data)
+    test_poisson_encode_decode_non_lookup(list_data)

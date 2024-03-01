@@ -104,7 +104,7 @@ class Poisson(Codec):
             dec = dec**2 / 4.0 - 1/8
 
             # We convert back to arbitrary pixels
-            dec = dec * self.signal_to_photon_gain + self.dark_signal
+            dec = dec * self.photon_sensitivity + self.dark_signal
 
             # We have to go back to integers
             decoded = np.round(dec)

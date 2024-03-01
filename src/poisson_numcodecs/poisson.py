@@ -107,9 +107,9 @@ class Poisson(Codec):
             dec = dec * self.signal_to_photon_gain + self.dark_signal
 
             # We have to go back to integers
-            outarray = np.round(dec)
+            decoded = np.round(dec)
             
-            outarray = ndarray_copy(outarray, out)
+            decoded = ndarray_copy(decoded, out)
 
         return decoded.astype(self.decoded_dtype)
 

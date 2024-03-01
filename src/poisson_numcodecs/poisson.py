@@ -54,16 +54,16 @@ class Poisson(Codec):
 
             # JEROME: I do not understand why we need to subtract np.sqrt(3/8) here
             # Also, shouldn't te +3/8 be inside the maximum function as xx is a float?
-            lookup = 2.0 / self.beta * (np.sqrt(np.maximum(0, xx) + 3/8) - np.sqrt(3/8))
+            forward = 2.0 / self.beta * (np.sqrt(np.maximum(0, xx) + 3/8) - np.sqrt(3/8))
             
             # JEROME : I think this might be better syntax?
-            lookup = np.round(lookup).astype(self.encoded_dtype)
-            self.lookup = lookup
+            forward = np.round(forward).astype(self.encoded_dtype)
+            self.forward_table = forward
 
-            _, inverse = np.unique(self.lookup, return_index=True)
+            _, inverse = np.unique(self.forward_table, return_index=True)
             inverse += (np.r_[:inverse.size] / 
                         inverse.size * (inverse[-1] - inverse[-2])/2).astype(self.decoded_dtype)
-            self.inverse = inverse
+            self.inverse_table = inverse
 
     def _lookup(self, movie, LUT):
         """
@@ -75,7 +75,7 @@ class Poisson(Codec):
         encoded = np.zeros(buf.shape, dtype=self.encoded_dtype)
 
         if self.use_lookup:
-            encoded = self._lookup(buf,  self.lookup)
+            encoded = self._lookup(buf,  self.forward_table)
         else:
             # We convert to photons
             centered = (buf.astype('float') - self.dark_signal) / self.photon_sensitivity
@@ -95,7 +95,7 @@ class Poisson(Codec):
         dec = ensure_ndarray(buf).view(self.encoded_dtype)
  
         if self.use_lookup:
-            decoded = self._lookup(dec,  self.inverse)
+            decoded = self._lookup(dec,  self.inverse_table)
         else:
             # We first unapply beta
             dec = dec.astype('float') * self.beta

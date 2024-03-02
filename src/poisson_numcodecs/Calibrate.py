@@ -1,8 +1,10 @@
 import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import HuberRegressor as Regressor
 
-class RasterCalibratePhotons():
+class CalibratePhotons():
     def __init__(self, data_array_movie):
 
         # We first check we have a 3D movie
@@ -13,14 +15,8 @@ class RasterCalibratePhotons():
         
         self.std_image = None
         self.mean_image = None
-        self.photon_gain = None
-        self.photon_offset = None
-        self.group_images = None
-        self.image_gain = None
-        self.image_offset = None
-        self.fitted_pixels = None
-        self.fitted_pixels_var = None
-        self.fitted_pixels_mean = None
+        self.photon_sensitivity = None
+        self.dark_signal = None
 
     def get_mean_image(self):
         """Get the mean image of the data array movie."""
@@ -44,7 +40,7 @@ class RasterCalibratePhotons():
         plt.colorbar()
         plt.axis("off")
         return fig
-
+    
     def plot_mean_projection_image(self, min_range=1, max_range=99):
         """Plot the mean projection image."""
         fig = plt.figure()
@@ -55,6 +51,164 @@ class RasterCalibratePhotons():
         plt.colorbar()
         plt.axis("off")
         return fig
+    
+    def subsample_and_crop_video(self, crop, start_frame=0, end_frame=-1):
+        """Subsample and crop a video, cache results. Also functions as a data_pointer load.
+
+        Args:
+            crop:  A tuple (px_y, px_x) specifying the number of pixels to remove
+            start_frame:  The index of the first desired frame
+            end_frame:  The index of the last desired frame
+
+        Returns:
+            The resultant array.
+        """
+
+        # We first reset the saved data
+        self.mean_image = None
+        self.std_image = None
+        self.photon_sensitivity = None
+        self.dark_signal = None
+        
+        _shape = self.data_array_movie.shape
+        px_y_start, px_x_start = crop
+        px_y_end = _shape[1] - px_y_start
+        px_x_end = _shape[2] - px_x_start
+
+        if start_frame == _shape[0] - 1 and (end_frame == -1 or end_frame == _shape[0]):
+            cropped_video = self.data_array_movie[
+                start_frame:_shape[0], px_y_start:px_y_end, px_x_start:px_x_end
+            ]
+        else:
+            cropped_video = self.data_array_movie[
+                start_frame:end_frame, px_y_start:px_y_end, px_x_start:px_x_end
+            ]
+        self.data_array_movie = cropped_video
+
+    def get_photon_flux_movie(self):        
+        """Get the photon flux movie. This is the movie with the photon gain and offset applied."""
+        if self.photon_sensitivity is None:
+            raise ValueError("You need to compute the photon gain parameters first.")
+        else:
+            photon_flux = (self.data_array_movie
+                        .astype('float') - self.dark_signalstype('float')) / self.photon_sensitivity
+
+            return photon_flux
+    
+class SequentialCalibratePhotons(CalibratePhotons):
+    def __init__(self, data_array_movie):
+
+        # We call the parent class
+        super().__init__(data_array_movie)
+
+        # This is part of the sequential object data clean up. 
+        self.data_array_movie = np.maximum(0, self.data_array_movie.astype(np.int32, copy=False))
+
+        self.photon_sensitivity = None
+        self.dark_signal = None
+        self.fitted_pixels = None
+        self.fitted_pixels_var = None
+        self.fitted_pixels_mean = None
+        self.fitted_model = None
+
+    def _longest_run(self, bool_array: np.ndarray) -> slice:
+        """
+        Find the longest contiguous segment of True values inside bool_array.
+        Args:
+            bool_array: 1d boolean array.
+        Returns:
+            Slice with start and stop for the longest contiguous block of True values.
+        """
+        step = np.diff(np.int8(bool_array), prepend=0, append=0)
+        on = np.where(step == 1)[0]
+        off = np.where(step == -1)[0]
+        i = np.argmax(off - on)
+        return slice(on[i], off[i])
+
+
+    def get_photon_sensitivity_parameters(self, count_weight_gamma: float=0.2) -> dict:
+        """Calculate photon sensitivity
+
+        Args:
+            count_weight_gamma: 0.00001=weigh each intensity level equally, 
+                1.0=weigh each intensity in proportion to pixel counts.
+
+        Returns:
+            A list with the photon gain and offset for each group of pixels.
+        """
+
+        intensity = (self.data_array_movie[:-1, :, :] + self.data_array_movie[1:, :, :] + 1) // 2
+        difference = self.data_array_movie[:-1, :, :].astype(np.float32) - self.data_array_movie[1:, :, :]
+
+        select = intensity > 0
+        intensity = intensity[select]
+        difference = difference[select]
+
+        counts = np.bincount(intensity.flatten())
+        bins = self._longest_run(counts > 0.01 * counts.mean())  # consider only bins with at least 1% of mean counts 
+        bins = slice(max(bins.stop * 3 // 100, bins.start), bins.stop)
+        assert (
+            bins.stop - bins.start > 100
+        ), f"Bins.start: {bins.start}, Bins.stop: {bins.stop}  The image does not have a sufficient range of intensities to compute the noise transfer function."
+
+        counts = counts[bins]
+        idx = (intensity >= bins.start) & (intensity < bins.stop)
+        variance = (
+            np.bincount(
+                intensity[idx] - bins.start,
+                weights=(difference[idx] ** 2) / 2,
+            )
+            / counts
+        )
+        model = Regressor()
+        model.fit(np.c_[bins], variance, counts ** count_weight_gamma)
+        sensitivity = model.coef_[0]
+        zero_level = - model.intercept_ / model.coef_[0]
+
+        self.photon_sensitivity = sensitivity
+        self.dark_signal = zero_level
+        self.fitted_pixels_var = variance
+        self.fitted_pixels_mean = np.c_[bins]
+        self.fitted_model = model
+
+        return [self.photon_sensitivity, self.dark_signal]
+
+    def plot_poisson_curve(self):
+        """Obtain a plot showing Poisson characteristics of the signal.
+
+        Returns:
+            A figure.
+        """
+        if self.fitted_pixels_mean is None:
+            raise ValueError("You need to compute the photon gain parameters first.")
+        else:
+            fig = plt.figure()
+
+            plt.scatter(self.fitted_pixels_mean, self.fitted_pixels_var, s=1)
+            mean_range = np.linspace(self.fitted_pixels_mean.min(), self.fitted_pixels_mean.max(), num=200)
+
+            plt.plot(mean_range, (mean_range - self.dark_signal)* self.photon_sensitivity, 'r')
+            plt.grid(True)
+            plt.xlabel('intensity')
+            plt.ylabel('variance')
+
+            return fig
+
+class RasterCalibratePhotons(CalibratePhotons):
+    def __init__(self, data_array_movie):
+
+        # We call the parent class
+        super().__init__(data_array_movie)
+
+        self.photon_sensitivity = None
+        self.dark_signal = None
+        self.group_images = None
+        self.image_gain = None
+        self.image_offset = None
+        self.fitted_pixels = None
+        self.fitted_pixels_var = None
+        self.fitted_pixels_mean = None
+
 
     def plot_assignment_image(self):
         """Plot the assignment image. This shows the pixels that are assigned to each group."""
@@ -76,7 +230,7 @@ class RasterCalibratePhotons():
         
         return fig  
     
-    def plot_photon_gain_image(self):
+    def plot_photon_sensitivity_image(self):
         """Plot the photon gain and offset images. These are the images that show the photon gain and offset for each pixel."""
 
         if self.image_gain is None:
@@ -97,39 +251,6 @@ class RasterCalibratePhotons():
 
         return fig
     
-    def subsample_and_crop_video(self, crop, start_frame=0, end_frame=-1):
-        """Subsample and crop a video, cache results. Also functions as a data_pointer load.
-
-        Args:
-            crop:  A tuple (px_y, px_x) specifying the number of pixels to remove
-            start_frame:  The index of the first desired frame
-            end_frame:  The index of the last desired frame
-
-        Returns:
-            The resultant array.
-        """
-
-        # We first reset the saved data
-        self.mean_image = None
-        self.std_image = None
-        self.photon_gain = None
-        self.photon_offset = None
-        
-        _shape = self.data_array_movie.shape
-        px_y_start, px_x_start = crop
-        px_y_end = _shape[1] - px_y_start
-        px_x_end = _shape[2] - px_x_start
-
-        if start_frame == _shape[0] - 1 and (end_frame == -1 or end_frame == _shape[0]):
-            cropped_video = self.data_array_movie[
-                start_frame:_shape[0], px_y_start:px_y_end, px_x_start:px_x_end
-            ]
-        else:
-            cropped_video = self.data_array_movie[
-                start_frame:end_frame, px_y_start:px_y_end, px_x_start:px_x_end
-            ]
-        self.data_array_movie = cropped_video
-
     def plot_poisson_curve(self):
         """Obtain a plot showing Poisson characteristics of the signal.
 
@@ -155,8 +276,8 @@ class RasterCalibratePhotons():
 
             mean_range = np.linspace(self.fitted_pixels_mean.min(), self.fitted_pixels_mean.max(), num=200)
 
-            for index, local_gain in enumerate(self.photon_gain):
-                local_offset = self.photon_offset[index]
+            for index, local_gain in enumerate(self.photon_sensitivity):
+                local_offset = self.dark_signal[index]
 
                 background_noise_mean = (
                     -local_offset / local_gain
@@ -172,14 +293,7 @@ class RasterCalibratePhotons():
 
             return fig
 
-    def get_photon_flux_movie(self, photon_offset, photon_gain):
-        background_noise_mean = -photon_offset.astype('float') / photon_gain
-        photon_flux = (self.data_array_movie
-                       .astype('float') - background_noise_mean) / photon_gain
-
-        return photon_flux
-
-    def get_photon_gain_parameters(self, max_pixel_range=2**15, n_groups=1, perc_min=3, perc_max=90):
+    def get_photon_sensitivity_parameters(self, max_pixel_range=2**15, n_groups=1, perc_min=3, perc_max=90):
         """Photon Gain.
 
         Extract the photon gain parameters from the data. This is useful for understanding the
@@ -199,7 +313,7 @@ class RasterCalibratePhotons():
             mean fluctuates too much due to other sources of signal in the data. 
 
         Returns:
-            A dictionary of parameters related to the physio signal.  Useful in making plots and metrics.
+            A list with the photon gain and offset for each group of pixels.
         """
 
         # Remove saturated pixels
@@ -234,20 +348,20 @@ class RasterCalibratePhotons():
 
         found_fits = self.fit_xlines(_var_filt, _mean_filt, n_groups, nb_attempts)
 
-        photon_gain_list = []
-        photon_offset_list = []
+        photon_sensitivity_list = []
+        dark_signal_list = []
 
         for i in range(found_fits.shape[0]):
             slope = found_fits[i, 0] 
             offset = found_fits[i, 1]
 
-            photon_gain_list.append(slope)
-            photon_offset_list.append(offset)
+            photon_sensitivity_list.append(slope)
+            dark_signal_list.append(-offset/slope)
 
-        self.photon_gain = np.array(photon_gain_list)
-        self.photon_offset = np.array(photon_offset_list)
+        self.photon_sensitivity = np.array(photon_sensitivity_list)
+        self.dark_signal = np.array(dark_signal_list)
 
-        return [self.photon_gain, self.photon_offset]
+        return [self.photon_sensitivity, self.dark_signal]
 
     # Define the regression model (line equation)
     def linear_model(self, params_flat, x, num_lines):
@@ -317,7 +431,7 @@ class RasterCalibratePhotons():
     def get_pixel_assignement_images(self):
         """Get the pixel assignment images. This is useful for understanding the pixels that are assigned to each group."""
 
-        if self.photon_gain is None:
+        if self.photon_sensitivity is None:
             raise ValueError("You need to compute the photon gain parameters first.")
         
         if self.group_images is not None:
@@ -328,12 +442,9 @@ class RasterCalibratePhotons():
         
         # We measure the fitting error for each pixel and for each line
         all_error = []
-        for index, local_gain in enumerate(self.photon_gain): 
-            local_offset = self.photon_offset[index]   
-            background_noise_mean = (
-                    -local_offset / local_gain
-                )
-            error = (self.fitted_pixels_var - local_gain * (self.fitted_pixels_mean - background_noise_mean))**2
+        for index, local_gain in enumerate(self.photon_sensitivity): 
+            local_offset = self.dark_signal[index]   
+            error = (self.fitted_pixels_var - local_gain * (self.fitted_pixels_mean - local_offset))**2
             all_error.append(error)
         all_error = np.array(all_error)
 
@@ -343,13 +454,13 @@ class RasterCalibratePhotons():
         image_gain = np.nan*np.ones(image_project.shape).flatten()
         image_offset = np.nan*np.ones(image_project.shape).flatten()
         group_images = []
-        for local_index, local_gain in enumerate(self.photon_gain): 
+        for local_index, local_gain in enumerate(self.photon_sensitivity): 
             plt.subplot(2,2,local_index+1)
             selected_pixels = np.where(closest==local_index)[0]
             local_project_copy = np.zeros(image_project.shape).flatten()
             local_project_copy[pixel_coords[selected_pixels]]=1
             image_gain[pixel_coords[selected_pixels]]=local_gain
-            image_offset[pixel_coords[selected_pixels]]=self.photon_offset[local_index]
+            image_offset[pixel_coords[selected_pixels]]=self.dark_signal[local_index]
             local_project_copy = local_project_copy.reshape(image_project.shape)
             group_images.append(local_project_copy)
 

@@ -112,5 +112,16 @@ class Poisson(Codec):
             decoded = ndarray_copy(decoded, out)
 
         return decoded.astype(self.decoded_dtype)
+    
+    def get_config(self):
+        return dict(
+            id=self.codec_id,
+            dark_signal=self.dark_signal,
+            photon_sensitivity=self.photon_sensitivity,
+            encoded_dtype=self.encoded_dtype,
+            decoded_dtype=self.decoded_dtype,
+            beta=self.beta,
+            use_lookup=self.use_lookup
+        )
 
 numcodecs.register_codec(Poisson)

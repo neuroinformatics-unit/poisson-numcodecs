@@ -9,7 +9,7 @@ The codec assumes that the video is linearly encoded with a potential offset (`d
 The codec re-quantizes the grayscale efficiently with a square-root-like transformation to equalize the noise variance across the grayscale levels: the [Anscombe Transform](https://en.wikipedia.org/wiki/Anscombe_transform).
 This results in a smaller number of unique grayscale levels and improvements in the compressibility of the data with a tunable trade-off (`beta`) for signal accuracy.
 
-To use the codec, one must supply two pieces of information: `dark_signal` (the input value corresponding to the absence of light) and `photon_sensitivity` (levels/photon). We provide two alternative routines to extract those numbers directly from signal statistics. Alternatively, they can be directly measured at the moment of data acquisition. Those calibration routines are provided in the [src/calibrate.py](src/calibrate.py) file. 
+To use the codec, one must supply two pieces of information: `dark_signal` (the input value corresponding to the absence of light) and `photon_sensitivity` (levels/photon). We provide two alternative routines to extract those numbers directly from signal statistics. Alternatively, they can be directly measured at the moment of data acquisition. Those calibration routines are provided in the [src/poisson_numcodecs/calibrate.py](src/poisson_numcodecs/calibrate.py) file. 
 
 The codec is used in Zarr as a filter prior to compression.
 

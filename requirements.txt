@@ -4,4 +4,3 @@ zarr
 matplotlib
 scipy
 scikit-learn
-imageio

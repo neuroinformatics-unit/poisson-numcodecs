@@ -279,14 +279,12 @@ class RasterCalibratePhotons(CalibratePhotons):
             for index, local_gain in enumerate(self.photon_sensitivity):
                 local_offset = self.dark_signal[index]
 
-                background_noise_mean = (
-                    -local_offset / local_gain
-                )
                 plt.tight_layout()
                 plt.plot(
                     mean_range,
-                    local_gain * (mean_range - background_noise_mean),
-                    label=f"Line {index}",
+                    local_gain * (mean_range - local_offset),
+                    'r', 
+                    label=f"Line {index}", 
                 )
             
             plt.legend()

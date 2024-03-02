@@ -4,12 +4,12 @@
 
 This codec is designed for compressing movies with Poisson noise, which are produced by photon-limited modalities such multiphoton microscopy, radiography, and astronomy.
 
-The codec assumes that the video is linearly encoded with a potential offset (`zero_level`) and that the `photon_sensitivity` (the average increase in intensity per photon) is known or can be accurately estimated from the data.
+The codec assumes that the video is linearly encoded with a potential offset (`dark_signal`) and that the `photon_sensitivity` (the average increase in intensity per photon) is known or can be accurately estimated from the data.
 
 The codec re-quantizes the grayscale efficiently with a square-root-like transformation to equalize the noise variance across the grayscale levels: the [Anscombe Transform](https://en.wikipedia.org/wiki/Anscombe_transform).
-This results in a smaller number of unique grayscale levels and significant improvements in the compressibility of the data without sacrificing signal accuracy.
+This results in a smaller number of unique grayscale levels and improvements in the compressibility of the data with a tunable trade-off (`beta`) for signal accuracy.
 
-To use the codec, one must supply two pieces of information: `zero_level` (the input value corresponding to the absence of light) and `photon_sensitivity` (levels/photon).
+To use the codec, one must supply two pieces of information: `dark_signal` (the input value corresponding to the absence of light) and `photon_sensitivity` (levels/photon). We provide two alternative routines to extract those numbers directly from signal statistics. Alternatively, they can be directly measured at the moment of data acquisition. Those calibration routines are provided in the [src/calibrate.py](src/calibrate.py) file. 
 
 The codec is used in Zarr as a filter prior to compression.
 
@@ -43,4 +43,5 @@ pytest tests/
 
 ## Usage
 
-An complete example is provided in [examples/workbook.ipynb](examples/workbook.ipynb)
+A complete example with sequential calibration and look-up compression is provided in [examples/raster_calibration_and_compression.ipynb](examples/raster_calibration_and_compression.ipynb)
+A complete example with raster calibration and compression is provided in [examples/sequential_calibration_and_lookup_compression.ipynb](examples/sequential_calibration_and_lookup_compression.ipynb)

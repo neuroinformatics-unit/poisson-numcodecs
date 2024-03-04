@@ -4,3 +4,5 @@ zarr
 matplotlib
 scipy
 scikit-learn
+ipympl
+mpl_interactions

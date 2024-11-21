@@ -170,6 +170,8 @@ class SequentialCalibratePhotons(CalibratePhotons):
         self.fitted_pixels_var = variance
         self.fitted_pixels_mean = np.c_[bins]
         self.fitted_model = model
+        self.min_intensity = bins.start
+        self.max_intensity = bins.stop
 
         return [self.photon_sensitivity, self.dark_signal]
 

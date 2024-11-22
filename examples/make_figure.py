@@ -9,7 +9,7 @@ import colorcet as cc
 
 def make_figure(scan: np.ndarray, figure_filename: Path, title: str = None):
     """
-    Create a figure with four subplots showing the average, photon transfer curve, 
+    Create a figure with four subplots showing the average, photon transfer curve,
     coefficient of variation, and quantum flux.
 
     Method adapted from the original notebook in:
@@ -124,16 +124,25 @@ def make_figure(scan: np.ndarray, figure_filename: Path, title: str = None):
 
 def main():
     """
-    Parse command line arguments and call make_figure.
+    This script generates a sample figure illustrating key metrics such as the
+    photon-transfer curve, coefficient of variation, and quantum flux.
 
-    Example usage:
-    python examples/replicate_paper_figure.py data.tif output_path \
-        --title "Title of the figure" 
+    It reads an input image file, processes the data, and creates a figure with
+    the specified title, saving it to the specified output path.
 
-    Raises
-    ------
-    FileNotFoundError
-        If the tif file does not exist.
+    Usage:
+        python make_figure.py input_image.tif output_path/ --title "Title of the figure"
+
+    Arguments:
+        input_image: Path to the input image file (TIFF format).
+        output_path: Directory to save the generated figure.
+        --title: Optional. Custom title for the figure (default is None).
+
+    Features:
+        - Processes the input image to extract relevant metrics.
+        - Creates a visual representation of the photon-transfer curve,
+        coefficient of variation, and quantum flux.
+        - Saves the generated figure to the specified output directory.
     """
 
     parser = argparse.ArgumentParser(description="Process and visualize 3-photon data.")
@@ -141,7 +150,9 @@ def main():
     parser.add_argument(
         "output_path", type=Path, help="Path to save the output .png file."
     )
-    parser.add_argument("--title", type=str, help="Optional title for the figure.", default=None)
+    parser.add_argument(
+        "--title", type=str, help="Optional title for the figure.", default=None
+    )
 
     args = parser.parse_args()
 

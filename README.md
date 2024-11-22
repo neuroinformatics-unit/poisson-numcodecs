@@ -45,3 +45,24 @@ pytest tests/
 
 A complete example with sequential calibration and look-up compression is provided in [examples/raster_calibration_and_compression.ipynb](examples/raster_calibration_and_compression.ipynb)
 A complete example with raster calibration and compression is provided in [examples/sequential_calibration_and_lookup_compression.ipynb](examples/sequential_calibration_and_lookup_compression.ipynb)
+
+### Additional Scripts
+
+This fork provides additional scripts for specific tasks. After installation, you can use the following commands:
+
+#### Generate a Sample Figure
+To create a sample figure displaying the photon-transfer curve, coefficient of variation, and quantum flux, run:
+
+```bash
+python examples/make_figure.py input_image.tif output_path/ --title "Title of the figure"
+```
+Replace input_image.tif with your input image file and output_path/ with the desired directory for the output. 
+The optional --title argument allows you to specify a custom title for the figure.
+
+#### Rescale a Movie
+To rescale your movie to photon/pixels/frame, use:
+
+```bash
+python examples/convert_movie.py input_movie.tif output_movie.tif
+```
+Replace input_movie.tif with the input movie file and output_movie.tif with the desired output file name.

@@ -128,7 +128,7 @@ def main():
 
     Example usage:
     python examples/replicate_paper_figure.py data.tif output_path \
-        --title "Title of the figure" --is_negative
+        --title "Title of the figure" 
 
     Raises
     ------
@@ -142,25 +142,19 @@ def main():
         "output_path", type=Path, help="Path to save the output .png file."
     )
     parser.add_argument("--title", type=str, help="Optional title for the figure.", default=None)
-    parser.add_argument(
-        "--is_negative",
-        action="store_true",
-        help="Flag to indicate if the input data is a.u. and stored as negative.",
-    )
 
     args = parser.parse_args()
 
     input_path = args.input_tif
     output_path = args.output_path
     title = args.title
-    is_negative = args.is_negative
 
     if not input_path.exists():
         raise FileNotFoundError(f"Input file {input_path} does not exist.")
 
     data = tif.imread(input_path)
 
-    if is_negative:
+    if np.min(data) < 0:
         data = data + np.min(data) * -1
 
     make_figure(data, output_path, title)

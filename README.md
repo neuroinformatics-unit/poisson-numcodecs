@@ -66,3 +66,7 @@ To rescale your movie to photon/pixels/frame, use:
 python examples/convert_movie.py input_movie.tif output_movie.tif
 ```
 Replace input_movie.tif with the input movie file and output_movie.tif with the desired output file name.
+
+> [!IMPORTANT]
+> This conversion will make the tif file not analysable by `suite2p`, as it expects `int16` data type.
+

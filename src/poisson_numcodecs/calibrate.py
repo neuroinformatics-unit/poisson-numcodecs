@@ -91,7 +91,7 @@ class CalibratePhotons():
             raise ValueError("You need to compute the photon gain parameters first.")
         else:
             photon_flux = (self.data_array_movie
-                        .astype('float') - self.dark_signalstype('float')) / self.photon_sensitivity
+                        .astype('float') - self.dark_signal) / self.photon_sensitivity
 
             return photon_flux
     
@@ -172,6 +172,7 @@ class SequentialCalibratePhotons(CalibratePhotons):
         self.fitted_model = model
         self.min_intensity = bins.start
         self.max_intensity = bins.stop
+        self.counts = counts
 
         return [self.photon_sensitivity, self.dark_signal]
 

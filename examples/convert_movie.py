@@ -7,8 +7,13 @@ from pathlib import Path
 import colorcet as cc
 
 
-def convert_movie(scan):
+def convert_movie(input_path=None, output_path=None):
+    scan = tif.imread(input_path)
 
+    if np.min(scan) < 0:
+        scan = scan + np.min(scan) * -1
+
+    
     print("Converting movie to photon flux movie...")
     calibrator = calibrate.SequentialCalibratePhotons(scan)
 
@@ -22,8 +27,9 @@ def convert_movie(scan):
     )
     photon_counts_per_pixel_per_frame = calibrator.get_photon_flux_movie()
 
-    return photon_counts_per_pixel_per_frame
-
+    tif.imwrite(output_path, photon_counts_per_pixel_per_frame) 
+    
+    print(f"Saved photon flux movie to {output_path}")
 
 def main():
     """
@@ -50,16 +56,9 @@ def main():
 
     args = parser.parse_args()
 
-    scan = tif.imread(args.input)
+    convert_movie(Path(args.input), Path(args.output))
 
-    if np.min(scan) < 0:
-        scan = scan + np.min(scan) * -1
-
-    flux_movie = convert_movie(scan)
-
-    tif.imsave(args.output, flux_movie)
-
-    print(f"Saved photon flux movie to {args.output}")
+    
 
 
 if __name__ == "__main__":

@@ -26,9 +26,12 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     fig = plt.figure(figsize=(8, 6))  # Adjust overall figure size
     fig, axd = plt.subplot_mosaic(
         [['mean_fluorescence', 'sensitivity_and_variance', 'coefficient_of_variation'],
+         ['mean_fluorescence', 'sensitivity_and_variance', 'coefficient_of_variation'],
          ['mean_fluorescence', 'histogram', 'coefficient_of_variation'],
+         ['cell_segmentation', 'max_flux', 'fluorescence_traces'],
+         ['cell_segmentation', 'max_flux', 'fluorescence_traces'],
          ['cell_segmentation', 'max_flux', 'fluorescence_traces']],
-        figsize=(5.5, 3.5),
+        figsize=(10, 8),
         gridspec_kw={'hspace': 0.4, 'wspace': 0.4}
     )
 
@@ -109,6 +112,8 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     traces = np.stack(
         [flux[:, labels == label].sum(axis=1) for label in np.unique(labels)[1:]]
     )
+    #  sort traces by their max descending
+    traces = traces[np.argsort(traces.max(axis=1))[::-1]]
     # taka a subset of traces
     traces = traces[:10]
 
@@ -119,6 +124,18 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Cell Number")
     ax.set_title("Fluorescence Traces")
+
+    #  set font size for everything, titles, ticks, labels, subplot titles
+    for ax in axd.values():
+        #  set figure title font size
+        ax.title.set_fontsize(14)
+        #  set subplot title font size
+        ax.title.set_fontsize(10)
+        #  set x and y axis labels font size
+        ax.xaxis.label.set_fontsize(8)
+        ax.yaxis.label.set_fontsize(8)
+        #  set x and y axis tick font size
+        ax.tick_params(axis='both', which='major', labelsize=8)
 
     # Save the entire figure
     fig.savefig(figure_filename, dpi=300)

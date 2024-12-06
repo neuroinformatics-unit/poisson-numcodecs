@@ -24,10 +24,16 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     )
 
     fig = plt.figure(figsize=(8, 6))  # Adjust overall figure size
-    gs = fig.add_gridspec(2, 3, hspace=0.4, wspace=0.4)
+    fig, axd = plt.subplot_mosaic(
+        [['mean_fluorescence', 'sensitivity_and_variance', 'coefficient_of_variation'],
+         ['mean_fluorescence', 'histogram', 'coefficient_of_variation'],
+         ['cell_segmentation', 'max_flux', 'fluorescence_traces']],
+        figsize=(5.5, 3.5),
+        gridspec_kw={'hspace': 0.4, 'wspace': 0.4}
+    )
 
     # Panel A: Mean Fluorescence
-    ax = fig.add_subplot(gs[0, 0])
+    ax = axd["mean_fluorescence"]
     mean_fluorescence = scan.mean(axis=0)
     ax.imshow(
         mean_fluorescence,
@@ -38,8 +44,8 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     ax.axis(False)
     ax.set_title("Mean Fluorescence")
 
-    # Panel B: Sensitivity and Variance
-    ax1 = fig.add_subplot(gs[0, 1])
+    # Panel B1: Sensitivity and Variance
+    ax1 = axd["sensitivity_and_variance"]
     x = np.arange(calibrator.min_intensity, calibrator.max_intensity)
     fit = calibrator.fitted_model.predict(x.reshape(-1, 1))
     ax1.scatter(
@@ -56,14 +62,15 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
         f"Sensitivity={photon_sensitivity:0.1f}; Zero Level={dark_signal:0.0f}"
     )
 
-    ax2 = fig.add_subplot(gs[0, 2])
+    # Panel B2: Histogram
+    ax2 = axd["histogram"]
     ax2.plot(x, calibrator.counts, color="k")
     ax2.set_xlabel("Intensity")
     ax2.set_ylabel("Density")
     ax2.grid(True)
 
     # Panel C: Coefficient of Variation
-    ax = fig.add_subplot(gs[1, 0])
+    ax = axd["coefficient_of_variation"]
     variance = ((scan[1:, :, :].astype("float64") - scan[:-1, :, :]) ** 2 / 2).mean(
         axis=0
     )
@@ -73,10 +80,11 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     ax.set_title("Coefficient of Variation")
 
     # Panel D: Activity Map and Segmentation
-    ax = fig.add_subplot(gs[1, 1])
+    ax = axd['cell_segmentation']
     flux = (scan - dark_signal) / photon_sensitivity
     activity_map = flux.max(axis=0) - flux.mean(axis=0)
     mask = activity_map > activity_map.max() * 0.5
+    print(f"Number of cells: {ndimage.label(mask)[1]}")
     labels, _ = ndimage.label(mask)
     hsv = np.stack(
         (
@@ -91,7 +99,7 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     ax.set_title("Activity Map with Segmentation")
 
     # Panel E: Max Flux
-    ax = fig.add_subplot(gs[1, 2])
+    ax = axd['max_flux']
     max_flux = flux.max(axis=0)
     ax.imshow(max_flux, cmap=cc.cm.CET_R4)
     ax.axis(False)
@@ -101,7 +109,10 @@ def generate_panels(scan: np.ndarray, output_dir: Path, file_name: str):
     traces = np.stack(
         [flux[:, labels == label].sum(axis=1) for label in np.unique(labels)[1:]]
     )
-    ax = fig.add_subplot(gs[1, 2])
+    # taka a subset of traces
+    traces = traces[:10]
+
+    ax = axd['fluorescence_traces']
     time = np.arange(traces.shape[1]) * 0.12
     for i, trace in enumerate(traces, 1):
         ax.plot(time, trace / 10000 + i, "k")

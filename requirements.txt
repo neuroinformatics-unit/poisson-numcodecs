@@ -6,3 +6,5 @@ scipy
 scikit-learn
 ipympl
 mpl_interactions
+tifffile
+colorcet

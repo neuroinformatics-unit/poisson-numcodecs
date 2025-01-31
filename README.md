@@ -70,12 +70,16 @@ Replace input_movie.tif with the input movie file and output_movie.tif with the 
 > [!IMPORTANT]
 > This conversion will make the tif file not analysable by `suite2p`, as it expects `int16` data type.
 
-#### Convert neuropil decontaminated signal (f -fneu) to photon/pixels/frame
-To convert a neuropil decontaminated signal (f - fneu) to photon/pixels/frame, run first suite2p on your data and then use:
+#### Convert neuropil decontaminated signal (f -fneu) to photon/pixels/ROI
+To convert a neuropil decontaminated signal (f - fneu) to photon/pixels/ROI, run first suite2p on your data and then use:
 ```bash
 python examples/convert_F_and_Fneu.py path_to_your_tif.tif path_to_suite2p_output/ 
 ```
-If you want to see example plots for a given ROI you can expand the comand to:
+Replace path_to_your_tif.tif with the neuropil decontaminated signal and path_to_suite2p_output/ with the directory containing the suite2p output. Use the printed output to compare the quantal size and intercept values of the original tif movie and the registered movie.
+
+This script will create `f_converted.npy` and `fneu_converted.npy` files in the suite2p output directory.
+
+To see comparison plots, run:
 ```bash
-python examples/convert_F_and_Fneu.py path_to_your_tif.tif path_to_suite2p_output/ --make_plots True --roi 0
+python examples/convert_F_and_Fneu.py path_to_your_tif.tif path_to_suite2p_output/ --make_plots True
 ```

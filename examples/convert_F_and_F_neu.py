@@ -223,7 +223,8 @@ def main(tif_path: Path, suite_2p_path: Path, make_plots: bool=False):
     """
     #  calculate on the raw movie as a meter of comparison
     print("Converting the original movie to photon flux...")
-    convert_movie(tif_path)
+    tiff = tif.imread(tif_path)
+    convert_movie(tiff)
 
     #  load the suite2p data
     f, fneu, stats, registered_movie = load_suite2p_data(suite_2p_path)
@@ -260,4 +261,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(args.tif_path, args.suite_2p_path, args.make_plots, args.roi_id)
+    main(args.tif_path, args.suite_2p_path, args.make_plots)

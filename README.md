@@ -81,5 +81,5 @@ This script will create `f_converted.npy` and `fneu_converted.npy` files in the 
 
 To see comparison plots, run:
 ```bash
-python examples/convert_F_and_Fneu.py path_to_your_tif.tif path_to_suite2p_output/ --make_plots True
+python examples/convert_F_and_F_neu.py path_to_your_tif.tif path_to_suite2p_output/ --make_plots True
 ```
